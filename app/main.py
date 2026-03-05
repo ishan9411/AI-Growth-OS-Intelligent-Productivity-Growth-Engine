@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine
-from . import models, schemas, crud
+from . import models, schemas, crud, analytics
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -34,11 +34,6 @@ def get_tasks(db: Session = Depends(get_db)):
 def get_users(db: Session = Depends(get_db)):
     return db.query(models.User).all()
 
-
-@app.put("/tasks/{task_id}/complete")
-def complete_task(task_id: int, db: Session = Depends(get_db)):
-    return crud.complete_task(db, task_id)
-
 @app.post("/tasks/start")
 def start_task(data: schemas.StartTask, db: Session = Depends(get_db)):
     return crud.start_task(db, data.task_id)
@@ -47,3 +42,9 @@ def start_task(data: schemas.StartTask, db: Session = Depends(get_db)):
 @app.post("/tasks/complete")
 def complete_task(data: schemas.CompleteTask, db: Session = Depends(get_db)):
     return crud.complete_task(db, data.task_id, data.focus_rating)
+
+@app.get("/analytics/{user_id}")
+def get_productivity(user_id: int, db: Session = Depends(get_db)):
+
+    tasks = db.query(models.Task).filter(models.Task.user_id == user_id).all()
+    return analytics.calculate_productivity(tasks)

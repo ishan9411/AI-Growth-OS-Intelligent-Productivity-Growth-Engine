@@ -11,6 +11,7 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 
 def create_task(db: Session, task: schemas.TaskCreate):
+    #check if the user exists also!!
     db_task = models.Task(title=task.title, planned_duration=task.planned_duration, user_id=task.user_id)
     db.add(db_task)
     db.commit()
