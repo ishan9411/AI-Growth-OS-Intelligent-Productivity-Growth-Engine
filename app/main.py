@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine
-from . import models, schemas, crud, analytics
+from . import models, schemas, crud, analytics, ai_service
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -48,3 +48,16 @@ def get_productivity(user_id: int, db: Session = Depends(get_db)):
 
     tasks = db.query(models.Task).filter(models.Task.user_id == user_id).all()
     return analytics.calculate_productivity(tasks)
+
+@app.get("/ai-report/{user_id}")
+def ai_report(user_id: int, db: Session = Depends(get_db)):
+
+    tasks = db.query(models.Task).filter(models.Task.user_id == user_id).all()
+
+    metrics = analytics.calculate_productivity(tasks)
+
+    ai_text = ai_service.generate_ai_insights(metrics)
+
+    metrics['ai_insights'] = ai_text
+
+    return metrics
